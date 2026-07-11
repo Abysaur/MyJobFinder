@@ -23,4 +23,14 @@ describe("normalizeJobs", () => {
     expect(jobs).toHaveLength(1);
     expect(jobs[0].title).toBe("First");
   });
+
+  it("sanitizes unsafe URL schemes to '#'", () => {
+    const [job] = normalizeJobs([raw({ url: "javascript:alert(1)" })]);
+    expect(job.url).toBe("#");
+  });
+
+  it("passes through normal http(s) URLs unchanged", () => {
+    const [job] = normalizeJobs([raw({ url: "https://example.com/job/1" })]);
+    expect(job.url).toBe("https://example.com/job/1");
+  });
 });

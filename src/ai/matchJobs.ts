@@ -7,9 +7,12 @@ For EACH job, output an object: { "jobId": string, "score": integer 0-100,
 "missingSkills": string[], "reason": string (one sentence) }.
 Respond with ONLY a JSON array of these objects, one per job, using the given jobId values.`;
 
+const MAX_MATCH_JOBS = 25;
+
 export async function matchJobs(resume: Resume, jobs: Job[]): Promise<MatchResult[]> {
   if (jobs.length === 0) return [];
-  const compactJobs = jobs.map((j) => ({
+  const capped = jobs.slice(0, MAX_MATCH_JOBS);
+  const compactJobs = capped.map((j) => ({
     jobId: j.id, title: j.title, company: j.company, tags: j.tags,
     description: j.description.slice(0, 600),
   }));

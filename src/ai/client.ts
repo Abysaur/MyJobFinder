@@ -13,10 +13,10 @@ function stripFences(text: string): string {
   return text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 }
 
-async function callOnce<T>(
+async function requestText(
   client: Anthropic,
-  opts: { system: string; user: string; schema: ZodType<T>; maxTokens: number },
-): Promise<T> {
+  opts: { system: string; user: string; maxTokens: number },
+): Promise<string> {
   const res = await client.messages.create({
     model: MODEL,
     max_tokens: opts.maxTokens,
@@ -24,9 +24,7 @@ async function callOnce<T>(
     messages: [{ role: "user", content: opts.user }],
   });
   const block = res.content.find((b) => b.type === "text");
-  const text = block && block.type === "text" ? block.text : "";
-  const parsed = JSON.parse(stripFences(text));
-  return opts.schema.parse(parsed);
+  return block && block.type === "text" ? block.text : "";
 }
 
 export async function completeJson<T>(opts: {
@@ -36,14 +34,17 @@ export async function completeJson<T>(opts: {
   maxTokens?: number;
 }): Promise<T> {
   const client = getAnthropic();
-  const args = { ...opts, maxTokens: opts.maxTokens ?? 2048 };
-  try {
-    return await callOnce(client, args);
-  } catch {
+  const args = { system: opts.system, user: opts.user, maxTokens: opts.maxTokens ?? 2048 };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const text = await requestText(client, args); // API/network errors propagate as-is
     try {
-      return await callOnce(client, args);
+      return opts.schema.parse(JSON.parse(stripFences(text)));
     } catch {
-      throw new Error("The AI returned an unexpected response. Please try again.");
+      if (attempt === 1) {
+        throw new Error("The AI returned an unexpected response. Please try again.");
+      }
     }
   }
+  // unreachable, satisfies the type checker
+  throw new Error("The AI returned an unexpected response. Please try again.");
 }

@@ -22,6 +22,21 @@ export const matchResultSchema = z.object({
 
 export const matchResultsSchema = z.array(matchResultSchema);
 
+export const jobSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  company: z.string(),
+  location: z.string(),
+  remote: z.boolean(),
+  salary: z.string().optional(),
+  url: z.string(),
+  description: z.string(),
+  postedDate: z.string(),
+  tags: z.array(z.string()),
+});
+
+export const jobsSchema = z.array(jobSchema);
+
 export const arbetnowResponseSchema = z.object({
   data: z.array(
     z.object({

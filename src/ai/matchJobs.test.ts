@@ -30,4 +30,17 @@ describe("matchJobs", () => {
     expect(result[0]).toEqual({ jobId: "j1", score: 80, missingSkills: [], reason: "ok" });
     expect(completeJson.mock.calls[0][0].user).toContain("j1");
   });
+
+  it("caps the jobs sent to the model at 25", async () => {
+    completeJson.mockResolvedValue([]);
+    const manyJobs: Job[] = Array.from({ length: 30 }, (_, i) => ({
+      ...job,
+      id: `j${i}`,
+    }));
+    await matchJobs(resume, manyJobs);
+    const user = completeJson.mock.calls[0][0].user as string;
+    const jobsJson = user.slice(user.indexOf("Jobs:\n") + "Jobs:\n".length);
+    const compact = JSON.parse(jobsJson) as { jobId: string }[];
+    expect(compact).toHaveLength(25);
+  });
 });

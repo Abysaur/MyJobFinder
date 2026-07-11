@@ -1,6 +1,10 @@
 import type { RawJob } from "@/services/jobs/arbetnow";
 import type { Job } from "@/types";
 
+function safeUrl(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : "#";
+}
+
 export function normalizeJobs(raw: RawJob[]): Job[] {
   const seen = new Set<string>();
   const jobs: Job[] = [];
@@ -13,7 +17,7 @@ export function normalizeJobs(raw: RawJob[]): Job[] {
       company: r.company_name,
       location: r.location,
       remote: r.remote,
-      url: r.url,
+      url: safeUrl(r.url),
       description: r.description,
       postedDate: new Date(r.created_at * 1000).toISOString(),
       tags: r.tags,

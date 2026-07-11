@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { matchJobs } from "@/ai/matchJobs";
-import { resumeSchema } from "@/lib/schemas";
-import type { Job } from "@/types";
+import { resumeSchema, jobsSchema } from "@/lib/schemas";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const resume = resumeSchema.parse(body.resume);
-    const jobs = Array.isArray(body.jobs) ? (body.jobs as Job[]) : [];
+    let resume, jobs;
+    try {
+      resume = resumeSchema.parse(body.resume);
+      jobs = jobsSchema.parse(body.jobs ?? []);
+    } catch (err) {
+      if (err instanceof ZodError) {
+        return NextResponse.json({ error: "Invalid request data." }, { status: 400 });
+      }
+      throw err;
+    }
     const matches = await matchJobs(resume, jobs);
     return NextResponse.json({ data: matches });
   } catch (err) {
