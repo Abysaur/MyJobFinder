@@ -7,8 +7,33 @@ import { JobCard } from "@/components/JobCard";
 import { useResumeUpload } from "@/hooks/useResumeUpload";
 import { useJobMatches } from "@/hooks/useJobMatches";
 import type { Resume } from "@/types";
+import type { ProviderStatus } from "@/services/jobs/provider";
 
 const MIN_FIT = 50; // hide roles that score below this out of 100
+
+function SearchedSources({ sources }: { sources: ProviderStatus[] }) {
+  if (sources.length === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 px-1">
+      <span className="label-soft">searched</span>
+      {sources.map((s) => (
+        <span
+          key={s.name}
+          className="chip inline-flex items-center gap-1.5"
+          title={s.ok ? `${s.count} listing${s.count === 1 ? "" : "s"} returned` : "Unavailable for this search"}
+        >
+          <span
+            className="inline-block h-1.5 w-1.5 rounded-full"
+            style={{ background: s.ok ? "var(--signal)" : "var(--signal-weak)" }}
+            aria-hidden
+          />
+          {s.label}
+          {!s.ok && <span className="text-[var(--signal-weak)]">· unavailable</span>}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 function ResumeReadout({
   resume,
@@ -133,10 +158,10 @@ export default function Home() {
   const matches = useJobMatches();
 
   const visible = useMemo(
-    () => (matches.data ?? []).filter((j) => j.match.score >= MIN_FIT),
+    () => (matches.data?.jobs ?? []).filter((j) => j.match.score >= MIN_FIT),
     [matches.data],
   );
-  const hidden = (matches.data?.length ?? 0) - visible.length;
+  const hidden = (matches.data?.jobs.length ?? 0) - visible.length;
 
   function toggleSave(id: string) {
     setSaved((prev) => {
@@ -243,6 +268,8 @@ export default function Home() {
             </p>
           )}
 
+          {matches.data && <SearchedSources sources={matches.data.sources} />}
+
           {matches.data && visible.length > 0 && (
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 px-1 pt-1">
               <span className="eyebrow">ranked by fit</span>
@@ -257,7 +284,7 @@ export default function Home() {
             <div className="panel p-10 text-center">
               <p className="eyebrow mb-2">no strong matches</p>
               <p className="t-sm text-[var(--ink-soft)]">
-                {matches.data.length === 0
+                {matches.data.jobs.length === 0
                   ? "Nothing matched this search. Try a broader title or a different location."
                   : `No roles scored ${MIN_FIT}% or higher${hidden > 0 ? ` (${hidden} weaker match${hidden === 1 ? "" : "es"} hidden)` : ""}. Try a broader search, or add skills above to sharpen the read.`}
               </p>

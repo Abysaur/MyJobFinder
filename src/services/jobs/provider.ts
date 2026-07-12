@@ -24,6 +24,14 @@ export interface JobProvider {
   search(query: JobQuery): Promise<Job[]>;
 }
 
+/** Per-provider outcome for a single search, surfaced to the UI. */
+export type ProviderStatus = {
+  name: string; // internal id, e.g. "adzuna"
+  label: string; // display name, e.g. "Adzuna"
+  ok: boolean; // false when the provider failed and was skipped
+  count: number; // raw results returned before merge/dedupe
+};
+
 const MAX_PAGE_SIZE = 50;
 
 /** Coerce loose/partial input (e.g. a request body) into a valid JobQuery with defaults. */

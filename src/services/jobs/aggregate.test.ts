@@ -90,7 +90,7 @@ describe("rankAndPaginate", () => {
 
 describe("runProviders", () => {
   it("queries providers concurrently and merges their results", async () => {
-    const jobs = await runProviders(
+    const { jobs } = await runProviders(
       [
         provider("p1", [job({ id: "p1", title: "One" })]),
         provider("p2", [job({ id: "p2", title: "Two" })]),
@@ -100,9 +100,24 @@ describe("runProviders", () => {
     expect(jobs.map((j) => j.id).sort()).toEqual(["p1", "p2"]);
   });
 
+  it("reports every searched provider with its status and raw count", async () => {
+    const { sources } = await runProviders(
+      [
+        provider("adzuna", [job({ id: "a1" }), job({ id: "a2", title: "Two" })]),
+        provider("bundesagentur", new Error("down")),
+      ],
+      query(),
+      vi.fn(),
+    );
+    expect(sources).toEqual([
+      { name: "adzuna", label: "Adzuna", ok: true, count: 2 },
+      { name: "bundesagentur", label: "Bundesagentur für Arbeit", ok: false, count: 0 },
+    ]);
+  });
+
   it("keeps results from healthy providers when one fails, and logs the error", async () => {
     const log = vi.fn();
-    const jobs = await runProviders(
+    const { jobs, sources } = await runProviders(
       [
         provider("broken", new Error("boom")),
         provider("healthy", [job({ id: "ok", title: "OK" })]),
@@ -112,16 +127,18 @@ describe("runProviders", () => {
     );
     expect(jobs.map((j) => j.id)).toEqual(["ok"]);
     expect(log).toHaveBeenCalledWith("broken", expect.any(Error));
+    expect(sources.find((s) => s.name === "broken")?.ok).toBe(false);
   });
 
   it("returns an empty list when every provider fails", async () => {
     const log = vi.fn();
-    const jobs = await runProviders(
+    const { jobs, sources } = await runProviders(
       [provider("a", new Error("x")), provider("b", new Error("y"))],
       query(),
       log,
     );
     expect(jobs).toEqual([]);
+    expect(sources.every((s) => !s.ok)).toBe(true);
     expect(log).toHaveBeenCalledTimes(2);
   });
 });

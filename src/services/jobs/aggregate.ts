@@ -3,10 +3,24 @@ import {
   logProviderError,
   type JobProvider,
   type JobQuery,
+  type ProviderStatus,
 } from "@/services/jobs/provider";
 import { arbetnowProvider } from "@/services/jobs/arbetnow";
 import { createAdzunaProvider } from "@/services/jobs/adzuna";
 import { BA_DEFAULT_BASE_URL, createBaProvider } from "@/services/jobs/ba";
+
+/** Friendly names for the boards we search. */
+const PROVIDER_LABELS: Record<string, string> = {
+  arbeitnow: "Arbeitnow",
+  adzuna: "Adzuna",
+  bundesagentur: "Bundesagentur für Arbeit",
+};
+
+/** Jobs plus a record of which boards were searched and how each fared. */
+export type SearchResult = {
+  jobs: Job[];
+  sources: ProviderStatus[];
+};
 
 /** Build the active provider set from the environment. Providers without
  *  credentials are simply left out, so the app degrades gracefully. */
@@ -88,24 +102,31 @@ export function rankAndPaginate(lists: Job[][], query: JobQuery): Job[] {
 }
 
 /** Query every provider concurrently; a failure in one is logged and skipped
- *  while the rest still contribute results. */
+ *  while the rest still contribute results. Always reports which boards were
+ *  searched and whether each one succeeded. */
 export async function runProviders(
   providers: JobProvider[],
   query: JobQuery,
   log: (provider: string, err: unknown) => void = logProviderError,
-): Promise<Job[]> {
+): Promise<SearchResult> {
   const settled = await Promise.allSettled(providers.map((p) => p.search(query)));
 
   const lists: Job[][] = [];
-  settled.forEach((result, i) => {
-    if (result.status === "fulfilled") lists.push(result.value);
-    else log(providers[i].name, result.reason);
+  const sources: ProviderStatus[] = settled.map((result, i) => {
+    const name = providers[i].name;
+    const label = PROVIDER_LABELS[name] ?? name;
+    if (result.status === "fulfilled") {
+      lists.push(result.value);
+      return { name, label, ok: true, count: result.value.length };
+    }
+    log(name, result.reason);
+    return { name, label, ok: false, count: 0 };
   });
 
-  return rankAndPaginate(lists, query);
+  return { jobs: rankAndPaginate(lists, query), sources };
 }
 
 /** Entry point used by the API route. */
-export function searchJobs(query: JobQuery): Promise<Job[]> {
+export function searchJobs(query: JobQuery): Promise<SearchResult> {
   return runProviders(getProviders(), query);
 }
