@@ -1,9 +1,6 @@
 import type { RawJob } from "@/services/jobs/arbetnow";
 import type { Job } from "@/types";
-
-function safeUrl(url: string): string {
-  return /^https?:\/\//i.test(url) ? url : "#";
-}
+import { safeUrl } from "@/services/jobs/shared";
 
 export function normalizeJobs(raw: RawJob[]): Job[] {
   const seen = new Set<string>();

@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchArbetnow } from "@/services/jobs/arbetnow";
-import { normalizeJobs } from "@/services/jobs/normalize";
+import { searchJobs } from "@/services/jobs/aggregate";
+import { normalizeQuery } from "@/services/jobs/provider";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const query = typeof body.query === "string" ? body.query : "";
-    const remote = body.remote === true;
-    const raw = await searchArbetnow(query, { remote });
-    return NextResponse.json({ data: normalizeJobs(raw) });
+    const body = await req.json().catch(() => ({}));
+    const query = normalizeQuery(body);
+    const jobs = await searchJobs(query);
+    return NextResponse.json({ data: jobs });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Something went wrong.";
     return NextResponse.json({ error: message }, { status: 500 });

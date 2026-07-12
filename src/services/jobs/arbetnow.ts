@@ -1,5 +1,8 @@
 import { arbetnowResponseSchema } from "@/lib/schemas";
 import type { z } from "zod";
+import type { Job } from "@/types";
+import type { JobProvider, JobQuery } from "@/services/jobs/provider";
+import { normalizeJobs } from "@/services/jobs/normalize";
 
 export type RawJob = z.infer<typeof arbetnowResponseSchema>["data"][number];
 
@@ -27,3 +30,16 @@ export async function searchArbetnow(
     return haystack.includes(q);
   });
 }
+
+/**
+ * Arbeitnow adapted to the common provider contract. The board returns the full
+ * listing at once, so keyword/remote filtering and pagination are applied here.
+ */
+export const arbetnowProvider: JobProvider = {
+  name: "arbeitnow",
+  async search(q: JobQuery): Promise<Job[]> {
+    const jobs = normalizeJobs(await searchArbetnow(q.query, { remote: q.remote }));
+    const start = (Math.max(1, q.page) - 1) * q.pageSize;
+    return jobs.slice(start, start + q.pageSize);
+  },
+};

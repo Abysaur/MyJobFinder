@@ -1,3 +1,321 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================
+   AI Job Finder — "Fit, as a current."
+   Fluid redesign: soft flowing forms, liquid gauges, spring
+   motion, and type/space that scale continuously with the
+   viewport. Amber is signal + action; nothing else.
+   ============================================================ */
+
+:root {
+  --paper: #f1f2ee;
+  --paper-2: #e7eae4; /* recessed wells */
+  --panel: #fbfcf9;
+  --ink: #14312e;
+  --ink-soft: #536a65;
+  --line: #d7ddd7;
+  --line-strong: #c2cbc4;
+  --signal: #e07d1c;
+  --signal-deep: #bd6109;
+  --signal-weak: #93a39d;
+  --wash-amber: #e07d1c26;
+  --wash-teal: #14312e12;
+  --surface-sheen: #ffffffb0;
+  --focus: #14312e;
+
+  /* fluid type scale — scales continuously, no breakpoints */
+  --fs-hero: clamp(2.5rem, 7.5vw, 4.5rem);
+  --fs-h1: clamp(1.9rem, 4.5vw, 2.9rem);
+  --fs-h2: clamp(1.15rem, 2.4vw, 1.6rem);
+  --fs-lead: clamp(1rem, 1.1vw + 0.8rem, 1.2rem);
+  --fs-body: clamp(0.92rem, 0.5vw + 0.82rem, 1.02rem);
+  --fs-sm: clamp(0.78rem, 0.3vw + 0.7rem, 0.88rem);
+  --fs-xs: clamp(0.68rem, 0.2vw + 0.62rem, 0.75rem);
+
+  /* fluid spacing */
+  --space-section: clamp(2.5rem, 6vw, 5rem);
+  --gap: clamp(0.9rem, 2vw, 1.5rem);
+
+  --r-lg: 24px;
+  --r-md: 16px;
+  --r-sm: 12px;
+  --r-pill: 999px;
+
+  --font-display: var(--font-bricolage), "Segoe UI", system-ui, sans-serif;
+  --font-body: var(--font-instrument-sans), "Segoe UI", system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0e1c1a;
+    --paper-2: #0a1615;
+    --panel: #15292a;
+    --ink: #e9efeb;
+    --ink-soft: #9cb2ab;
+    --line: #274040;
+    --line-strong: #36514f;
+    --signal: #f0912f;
+    --signal-deep: #f0912f;
+    --signal-weak: #61776f;
+    --wash-amber: #f0912f22;
+    --wash-teal: #7fd6c40f;
+    --surface-sheen: #ffffff14;
+    --focus: #f0912f;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  position: relative;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* --- Ambient flowing backdrop --------------------------------------- */
+/* Two soft washes that drift slowly, like light on water. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -30vmax;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(38vmax 38vmax at 18% 12%, var(--wash-amber), transparent 60%),
+    radial-gradient(42vmax 42vmax at 85% 78%, var(--wash-teal), transparent 62%),
+    radial-gradient(30vmax 30vmax at 70% 8%, var(--wash-amber), transparent 55%);
+  filter: blur(6px);
+  animation: drift 34s ease-in-out infinite alternate;
+}
+@keyframes drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2vw, -2vh, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-2vw, 2vh, 0) scale(1.02);
+  }
+}
+
+::selection {
+  background: var(--signal);
+  color: #fff;
+}
+
+/* --- Typography ----------------------------------------------------- */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* fluid type-scale utilities (avoids Tailwind's ambiguous text-[var()]) */
+.t-h1 {
+  font-size: var(--fs-h1);
+}
+.t-h2 {
+  font-size: var(--fs-h2);
+}
+.t-lead {
+  font-size: var(--fs-lead);
+}
+.t-body {
+  font-size: var(--fs-body);
+}
+.t-sm {
+  font-size: var(--fs-sm);
+}
+
+.eyebrow {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--signal-deep);
+}
+.label-soft {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* --- Soft panels ---------------------------------------------------- */
+.panel {
+  position: relative;
+  background: linear-gradient(180deg, var(--panel), color-mix(in srgb, var(--panel) 92%, var(--paper-2)));
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 1px 1px #14312e08, 0 14px 34px -22px #14312e40;
+}
+/* subtle top sheen — light catching a curved surface */
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(180deg, var(--surface-sheen), transparent 40%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* --- Controls (pills) ---------------------------------------------- */
+.btn-signal {
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #241100;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--signal) 92%, #fff), var(--signal));
+  border: 1px solid var(--signal-deep);
+  border-radius: var(--r-pill);
+  padding: 0.62rem 1.35rem;
+  cursor: pointer;
+  box-shadow: 0 6px 18px -8px var(--signal), 0 1px 0 #ffffff55 inset;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-signal:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 26px -10px var(--signal), 0 1px 0 #ffffff66 inset;
+}
+.btn-signal:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+.btn-signal:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.btn-ghost {
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  padding: 0.62rem 1.35rem;
+  cursor: pointer;
+  transition: border-color 0.35s ease, background 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-ghost:hover {
+  border-color: var(--ink-soft);
+  background: var(--wash-teal);
+  transform: translateY(-1px);
+}
+
+.input-field {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  padding: 0.7rem 1.1rem;
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+}
+.input-field::placeholder {
+  color: var(--ink-soft);
+}
+.input-field:focus {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 4px var(--wash-amber);
+}
+
+.chip {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--ink-soft);
+  background: var(--paper-2);
+  border-radius: var(--r-pill);
+  padding: 0.22rem 0.65rem;
+}
+
+/* --- Focus floor --------------------------------------------------- */
+a,
+button,
+input,
+[tabindex] {
+  outline: none;
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
+/* --- Liquid signal gauge ------------------------------------------- */
+/* The signature element: match score as a rising liquid level. */
+.gauge-track {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  background: var(--paper-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+.gauge-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+/* flowing surface shimmer — a slow sweep of light across the liquid */
+.gauge-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    #ffffff5c 45%,
+    #ffffff5c 55%,
+    transparent 80%
+  );
+  background-size: 220% 100%;
+  animation: flow 2.6s linear infinite;
+}
+@keyframes flow {
+  from {
+    background-position: 160% 0;
+  }
+  to {
+    background-position: -60% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  body::before {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .gauge-fill::after {
+    display: none;
+  }
+}
